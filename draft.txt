@@ -1,0 +1,61 @@
+
+
+┌─────────────────────┐
+│ GUI (PC)            │
+│ Draw waveform       │
+│ Trigger controls    │
+│ Timebase controls   │
+└─────────┬───────────┘
+          │ USB
+┌─────────▼───────────┐
+│ RP2040 Firmware     │
+│ ADC + DMA           │
+│ Sample buffer       │
+│ USB transfer        │
+└─────────┬───────────┘
+          │
+┌─────────▼───────────┐
+│ Analog Front End    │
+│ Protection          │
+│ Voltage scaling     │
+└─────────────────────┘
+
+
+
+Oscilloscope Features
+
+Start simple:
+
+# Version 1 ------------------------
+ - Connect
+ - Start
+ - Stop
+ - Display waveform
+# Version 2 ------------------------
+ - Trigger level
+ - Time scale
+ - Voltage scale
+# Version 3 ------------------------
+ - FFT view
+ - Measurements
+ - Frequency
+ - RMS
+ - Peak-to-peak
+
+
+ RP2040 ADC + DMA → USB CDC → Python + PyQtGraph
+ 
+ 
+ 
+ 
+A)
+Make waveform stable (add packet framing in firmware)
+
+B)
+Add time axis + real sample rate calibration
+
+C)
+Add trigger system (oscilloscope behavior upgrade)
+
+D)
+Upgrade GUI (volt/div, time/div, UI controls)
