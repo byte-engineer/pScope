@@ -1,3 +1,4 @@
+import sys
 import serial
 import numpy as np
 import pyqtgraph as pg
@@ -8,20 +9,14 @@ PORT = "/dev/ttyACM0"
 BAUD = 115200
 
 N_SAMPLES = 1024
-
 VREF = 3.3
-
-# TEMPORARY SAMPLE RATE (we will calibrate later)
-SAMPLE_RATE = 100000  # 100 kS/s
-
-DT = 1.0 / SAMPLE_RATE
+SAMPLE_RATE = 100000
 # ----------------------------------------
 
-ser = serial.Serial(PORT, BAUD)
+# ---------------- GUI INIT FIRST ----------------
+app = QtWidgets.QApplication(sys.argv)
 
-app = QtWidgets.QApplication([])
-
-win = pg.GraphicsLayoutWidget(title="pScope")
+win = pg.GraphicsLayoutWidget(title="pScope Oscilloscope")
 plot = win.addPlot(title="Waveform")
 
 plot.setLabel('left', 'Voltage', units='V')
@@ -32,23 +27,56 @@ curve = plot.plot(pen='g')
 
 win.show()
 
+# ---------------- SERIAL INIT ----------------
+try:
+    ser = serial.Serial(PORT, BAUD, timeout=1)
+    print("Serial connected")
+except Exception as e:
+    print("Serial error:", e)
+    ser = None
 
+
+# ---------------- READ FUNCTION ----------------
+def read_frame():
+    if ser is None:
+        return None
+
+    try:
+        # sync word
+        while True:
+            b = ser.read(2)
+            if len(b) < 2:
+                return None
+            if b[0] == 0x5A and b[1] == 0xA5:
+                break
+
+        raw = ser.read(N_SAMPLES * 2)
+        if len(raw) != N_SAMPLES * 2:
+            return None
+
+        return np.frombuffer(raw, dtype=np.uint16)
+
+    except Exception as e:
+        print("Read error:", e)
+        return None
+
+
+# ---------------- UPDATE LOOP ----------------
 def update():
-    raw = ser.read(N_SAMPLES * 2)
+    samples = read_frame()
+    if samples is None:
+        return
 
-    samples = np.frombuffer(raw, dtype=np.uint16)
-
-    # Convert ADC → voltage
-    voltage = (samples / 256) * VREF
-
-    # Build time axis
-    t = np.arange(N_SAMPLES) * DT
+    voltage = (samples / 4095.0) * VREF
+    t = np.arange(N_SAMPLES) / SAMPLE_RATE
 
     curve.setData(t, voltage)
 
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
-timer.start(20)   # ~50 FPS
+timer.start(20)
 
-app.exec()
+
+# ---------------- START APP ----------------
+sys.exit(app.exec())
