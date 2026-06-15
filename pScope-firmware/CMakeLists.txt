@@ -1,17 +1,3 @@
-
-# target_link_libraries(pScope
-#     pico_stdlib
-#     hardware_adc
-#     hardware_dma
-# )
-
-# pico_enable_stdio_usb(pScope 1)
-# pico_enable_stdio_uart(pScope 0)
-
-# pico_add_extra_outputs(pScope)
-
-
-
 # Generated Cmake Pico project file
 
 cmake_minimum_required(VERSION 3.13)
@@ -54,6 +40,12 @@ add_executable(pScope-firmware pScope-firmware.c )
 pico_set_program_name(pScope-firmware "pScope-firmware")
 pico_set_program_version(pScope-firmware "0.1")
 
+
+add_compile_definitions(PICO_STDIO_USB_RESET_ON_DISCONNECT=1)
+# add_compile_definitions(PICO_STDIO_USB_LOW_PRIORITY_IRQ=0)
+add_compile_definitions(PICO_STDIO_USB_ENABLE_SLEEP_ON_DEFAULT=0)
+
+
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(pScope-firmware 0)
 pico_enable_stdio_usb(pScope-firmware 1)
@@ -64,6 +56,7 @@ target_link_libraries(pScope-firmware
         pico_multicore
         hardware_adc
         hardware_dma
+        hardware_clocks
     )
 
 # Add the standard include files to the build
@@ -72,4 +65,3 @@ target_include_directories(pScope-firmware PRIVATE
 )
 
 pico_add_extra_outputs(pScope-firmware)
-

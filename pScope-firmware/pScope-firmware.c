@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "hardware/clocks.h"
 #include "hardware/adc.h"
 #include "hardware/dma.h"
 #include "pico/multicore.h"
@@ -7,7 +8,10 @@
 #define ADC_PIN     26
 #define ADC_CHANNEL 0
 
-#define N_SAMPLES   1024
+#define UART_ID uart0
+#define BAUD_RATE 921600 
+
+#define N_SAMPLES   1024 * 2
 
 // --- Oversampling ----------------------------------------------------
 // Each output sample is the average of OVERSAMPLE raw ADC readings.
@@ -18,7 +22,7 @@
 // capture runs at ~400 ksps while the output frame still represents
 // N_SAMPLES points spanning the same total capture time (~10.24 ms)
 // as before -> frame size, timing, and protocol are unchanged.
-#define OVERSAMPLE   1
+#define OVERSAMPLE   32
 #define RAW_SAMPLES (N_SAMPLES * OVERSAMPLE)
 
 #define SYNC_WORD   0xA55A
@@ -38,14 +42,16 @@ void core1_main()
     while (true)
     {
         gpio_xor_mask(1u << led_pin);
-        sleep_ms(4);
+        sleep_ms(50);
     }
 }
 
 int main()
 {
+    set_sys_clock_khz(250000, true);
     stdio_init_all();
     multicore_launch_core1(core1_main);
+    uart_init(UART_ID, BAUD_RATE);
 
     sleep_ms(2000);
 
@@ -112,7 +118,7 @@ int main()
             for (int j = 0; j < OVERSAMPLE; j++) {
                 acc += raw_samples[i * OVERSAMPLE + j];
             }
-            samples[i] = (uint16_t)(acc / OVERSAMPLE);
+            samples[i] = (uint16_t)(acc / OVERSAMPLE) + 30;
         }
 
         // SEND FRAME: 2-byte sync word followed by N_SAMPLES uint16 values

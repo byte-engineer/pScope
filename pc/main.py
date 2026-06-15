@@ -11,12 +11,12 @@ from pyqtgraph.Qt import QtCore, QtWidgets
 # Configuration
 # ---------------------------------------------------------------------------
 PORT = "/dev/ttyACM0"
-BAUD = 115200
+BAUD = 921600
 
-N_SAMPLES = 1024
+N_SAMPLES = 1024 * 2
 VREF = 3.3
-ADC_MAX = 4095
-SAMPLE_RATE = 100000
+ADC_MAX = 2**8
+SAMPLE_RATE = 100000   # <--- 
 
 SYNC_WORD = 0xA55A
 SYNC_BYTES = struct.pack('<H', SYNC_WORD)
@@ -186,16 +186,16 @@ class ScopeWindow(QtWidgets.QMainWindow):
             self.plot.scene().sigMouseMoved, rateLimit=60, slot=self._mouse_moved
         )
 
-        self.fft_plot = pg.PlotWidget()
-        self.fft_plot.setMenuEnabled(False)
-        self.fft_plot.showGrid(x=True, y=True, alpha=0.25)
-        self.fft_plot.setLabel('left', 'Magnitude', units='dB')
-        self.fft_plot.setLabel('bottom', 'Frequency', units='Hz')
-        self.fft_plot.setXRange(0, SAMPLE_RATE / 2)
-        self.fft_curve = self.fft_plot.plot(pen=pg.mkPen(FFT_COLOR, width=1.5))
+        # self.fft_plot = pg.PlotWidget()
+        # self.fft_plot.setMenuEnabled(False)
+        # self.fft_plot.showGrid(x=True, y=True, alpha=0.25)
+        # self.fft_plot.setLabel('left', 'Magnitude', units='dB')
+        # self.fft_plot.setLabel('bottom', 'Frequency', units='Hz')
+        # self.fft_plot.setXRange(0, SAMPLE_RATE / 2)
+        # self.fft_curve = self.fft_plot.plot(pen=pg.mkPen(FFT_COLOR, width=1.5))
 
         plot_container.addWidget(self.plot, 4)
-        plot_container.addWidget(self.fft_plot, 1)
+        # plot_container.addWidget(self.fft_plot, 1)
 
         root.addLayout(plot_container, 4)
 
@@ -363,7 +363,7 @@ class ScopeWindow(QtWidgets.QMainWindow):
 
         search = self.history[HALF: len(self.history) - HALF]
         trig = self.find_trigger(search, level_adc)
-
+    
         if trig is None:
             aligned = self.history[N_SAMPLES:]
             trig_index = None
